@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.pyc
+
+# Build / render artifacts
+*.pdf
+*.jpg
+*.zip
+
+# Node (used only for docx generation)
+node_modules/
+package-lock.json
+package.json
