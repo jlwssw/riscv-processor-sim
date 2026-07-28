@@ -5,7 +5,7 @@ architectural layer at a time: instruction set and assembler, a gate-level ALU, 
 single-cycle datapath, a five-stage pipeline with hazard handling, and a
 configurable cache. Every layer has an automated test suite.
 
-Built as an independent project for a graduate computer architecture course
+Built as part of an independent project for a graduate computer architecture course
 (CS 5375, Computer Systems Organization and Architecture).
 
 ## What it does
