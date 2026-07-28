@@ -104,6 +104,9 @@ class PipelinedCPU:
 
     def _forward(self, src, uses, default, exmem, memwb):
         """Bypass network: prefer the most recent producer (EX/MEM), else MEM/WB."""
+        # Instead of waiting for a result to reach the register file, grab it
+        # straight from a later pipeline stage. EX/MEM is the more recent producer,
+        # so it takes priority over MEM/WB when both hold the needed register.
         if not uses:
             return default
         if exmem and exmem["reg_write"] and exmem["rd"] != 0 \
@@ -181,6 +184,10 @@ class PipelinedCPU:
             }
 
         # ---------- load-use hazard detection (stall?) ----------
+        # A load's value is not ready until the end of MEM, so it cannot forward to
+        # the very next instruction. If the instruction in ID reads a register a
+        # load in EX is about to write, stall one cycle; the value forwards from
+        # MEM/WB on the following cycle.
         stall = False
         if oldIDEX and oldIDEX["mem_read"] and oldIDEX["rd"] != 0 and oldIFID:
             need = ((oldIFID["uses_rs1"] and oldIFID["rs1"] == oldIDEX["rd"]) or
@@ -194,6 +201,9 @@ class PipelinedCPU:
             newIFID = oldIFID         # hold the instruction in ID
             # PC frozen (do not fetch)
         elif redirect:
+            # A branch or jump was taken, so the two instructions already fetched
+            # behind it are wrong. Squash them (turn them into bubbles) and send the
+            # PC to the correct target.
             self.flushes += 1
             newIDEX = None            # squash instruction that was in ID
             newIFID = None            # squash instruction that was in IF

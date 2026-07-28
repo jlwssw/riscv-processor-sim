@@ -5,7 +5,7 @@ architectural layer at a time: instruction set and assembler, a gate-level ALU, 
 single-cycle datapath, a five-stage pipeline with hazard handling, and a
 configurable cache. Every layer has an automated test suite.
 
-Built as part of an independent project for a graduate computer architecture course
+Built as an independent project for a graduate computer architecture course
 (CS 5375, Computer Systems Organization and Architecture).
 
 ## What it does
@@ -45,4 +45,7 @@ python cache_demo.py                      # cache demonstration
 python perf.py                            # performance analysis
 ```
 
-See `PROJECT_REPORT.md` for the full technical write-up.
+## Documentation
+
+- [PROJECT_REPORT.md](PROJECT_REPORT.md) - the full technical write-up of every phase.
+- [CACHE_INTEGRATION.md](CACHE_INTEGRATION.md) - how the cache is wired behind the pipeline and how effective CPI is computed.

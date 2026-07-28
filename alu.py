@@ -26,6 +26,9 @@ WIDTH = 32
 MASK = (1 << WIDTH) - 1
 SIGN_BIT = 1 << (WIDTH - 1)
 
+# Every operation reports four status flags that branch and comparison logic read:
+# zero (result is 0), carry_out (a carry left bit 31), overflow (the signed result
+# did not fit in 32 bits), and negative (bit 31, the sign bit, is set).
 Flags = namedtuple("Flags", ["zero", "carry_out", "overflow", "negative"])
 
 
@@ -34,8 +37,8 @@ Flags = namedtuple("Flags", ["zero", "carry_out", "overflow", "negative"])
 # ---------------------------------------------------------------------------
 def full_adder(a, b, cin):
     """One bit of addition. sum = a XOR b XOR cin; carry = majority(a,b,cin)."""
-    s = a ^ b ^ cin
-    cout = (a & b) | (b & cin) | (a & cin)
+    s = a ^ b ^ cin                          # sum bit: XOR is 1 when an odd number of the inputs are 1
+    cout = (a & b) | (b & cin) | (a & cin)   # carry-out: majority function, 1 when two or more inputs are 1
     return s, cout
 
 
@@ -50,6 +53,8 @@ def ripple_add(a, b, cin=0):
     result = 0
     carry = cin
     carry_into_msb = 0
+    # Ripple-carry adder: chain WIDTH one-bit full adders, feeding each carry-out
+    # into the next bit's carry-in, which is how a simple adder is wired in hardware.
     for i in range(WIDTH):
         abit = (a >> i) & 1
         bbit = (b >> i) & 1
@@ -102,7 +107,8 @@ class ALU:
             return result, _flags(result, cout, ovf)
 
         if ctrl == ALUControl.SUB:
-            # a - b  ==  a + (~b) + 1
+            # Two's complement: a - b == a + (~b) + 1. Invert b's bits and set the
+            # adder's carry-in to 1, so the one adder also does subtraction.
             result, cout, ovf = ripple_add(a, (~b) & MASK, 1)
             return result, _flags(result, cout, ovf)
 
@@ -123,7 +129,9 @@ class ALU:
             return result, _flags(result, 0, 0)
 
         if ctrl == ALUControl.SLT:
-            # signed: compute a-b, then look at sign XOR overflow
+            # Signed set-less-than: compute a - b. a < b when the result is
+            # negative, but overflow can flip the sign bit, so the correct test is
+            # (sign bit) XOR (overflow), which stays right even when a - b overflows.
             diff, cout, ovf = ripple_add(a, (~b) & MASK, 1)
             neg = 1 if (diff & SIGN_BIT) else 0
             result = neg ^ ovf

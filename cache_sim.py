@@ -51,6 +51,9 @@ class Cache:
 
     # ---- address breakdown ----
     def fields(self, addr):
+        # Split the address into three parts: drop the low offset bits to get the
+        # block number, take the low index bits to choose the set, and the bits
+        # above that are the tag that identifies the block within the set.
         block = addr >> self.offset_bits
         index = block & (self.num_sets - 1) if self.num_sets > 1 else 0
         tag = block >> self.index_bits
@@ -58,6 +61,9 @@ class Cache:
 
     # ---- one memory reference ----
     def access(self, addr):
+        # If the tag is already in its set it is a hit. Otherwise it is a miss,
+        # and if the set is full we evict the least-recently-used block (front of
+        # the list) before inserting the new one at the back (most recent).
         index, tag = self.fields(addr)
         line = self.sets[index]
         if tag in line:

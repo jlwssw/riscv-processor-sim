@@ -115,10 +115,15 @@ def run_benchmark(name, src):
     pc = PipelinedCPU(icache=ic, dcache=dc)
     pc.load_program(words, asm.data); pc.run()
     total_misses = ic.misses + dc.misses
+    # Effective CPI = base pipeline CPI plus the average stall cycles the cache
+    # misses add per instruction (misses x penalty, spread over all instructions).
     mem_stall_per_instr = total_misses * MISS_PENALTY / n_instr
     cpi_eff = cpi + mem_stall_per_instr
 
     # times and speedups
+    # Execution time = instructions x CPI x clock period. The single-cycle machine
+    # pays a 5-unit clock (all five stages in one tick); the pipeline pays a 1-unit
+    # clock but a higher CPI. Speedup is the ratio of the two execution times.
     t_single = n_instr * 1.0 * STAGES
     t_pipe = n_instr * cpi * 1.0
     t_pipe_cache = n_instr * cpi_eff * 1.0

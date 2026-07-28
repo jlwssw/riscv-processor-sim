@@ -225,6 +225,9 @@ class SingleCycleCPU:
         rv2 = self.rf.read(rs2)
 
         # ---- ALU input muxes ----
+        # Control signals steer each operand. Input A is normally rs1 (but the PC
+        # for auipc/jal, or 0 for lui); input B is the immediate when ALUSrc is set,
+        # otherwise the second register rs2.
         a = {"rs1": rv1, "pc": self.pc, "zero": 0}[ctrl.a_src]
         b = imm if ctrl.alu_src else rv2
         actrl = alu_control(ctrl.alu_op, funct3, funct7)
@@ -250,6 +253,9 @@ class SingleCycleCPU:
             self.mem.store(alu_result, size, rv2)
 
         # ---- WRITEBACK mux ----
+        # ResultSrc chooses what value is written back to rd: the ALU output, data
+        # read from memory (loads), PC+4 (the return address for jal/jalr), or the
+        # immediate (lui).
         result = {
             RES_ALU: alu_result,
             RES_MEM: mem_data,
